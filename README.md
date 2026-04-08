@@ -1,4 +1,4 @@
-# ground-truth-cli
+# ground-truth-cli (v1.1.0)
 
 An **Agent-Native** Model Context Protocol (MCP) server designed for project initialization and "Ground Truth" rule synthesis. It streamlines the onboarding process for AI coding assistants by scanning project context and generating rigid behavioural constraints in Token-Oriented Object Notation (TOON).
 
@@ -14,6 +14,7 @@ This server follows the **Agent-Native** architecture pattern:
 | Tool | Action | Description |
 |--- |--- |--- |
 | `gt_status` | Orient | Returns high-level summary of the current project state and orientation. |
+| `gt_refresh` | Build | Parameterless tool to quickly rebuild the project rules based on current context. |
 | `gt_help` | Learn | Pulls deep documentation for specific topics (e.g., `scan`, `rules`). |
 | `gt_exec` | Act | The workhorse tool. Usage: `gt_exec scan <path>`. |
 
@@ -35,12 +36,16 @@ Each rule follows a strict 3-part schema:
 2. **Behaviour:** The rigid constraint (e.g., "You must use JSDoc for all parameters.").
 3. **Example:** Correct vs. Incorrect illustrations using native string bounding tokens `<|">`.
 
-## 🔄 The Scanning Pipeline
-When `gt_exec scan .` is invoked:
-1. **Operational Facts Discovery:** The server scans `package.json`, `tsconfig.json`, and repo structure to identify the Language, Test Framework, Build System, and Strict Typing status.
-2. **Dynamic Placeholder Population:** These facts are sequentially injected into the `ground_truth_rules.toon` template.
-3. **Project Gap Synthesis:** Any unique project requirements (detected stack dependencies, specific guidelines) are synthesized into a `project_specific_pack`.
-4. **Final Output:** A complete `.assistant_rules.toon` file is generated, acting as the "Project Constitution".
+## 🔄 The Scanning Pipeline (V1.1.0)
+When `gt_exec scan .` or `gt_refresh` is invoked:
+1. **Monorepo-Aware Fact Discovery:** The server traverses the workspace (using `glob`) to aggregate dependencies from all `package.json` files.
+2. **Enhanced Ecosystem Heuristics:** Automatically detects modern runtimes and frameworks including:
+   - **Testing:** Bun Native Testing, Playwright (E2E), Vitest, Jest, Cypress, AVA.
+   - **Frameworks:** Solid.js, SST (Serverless Stack), Effect-ts.
+3. **Prioritized Guideline Extraction:** The scanner prioritizes AI-specific instructions found in **`AGENTS.md`**, **`.cursorrules`**, and **`.windsurfrules`**.
+4. **Dynamic Placeholder Population:** These facts are sequentially injected into the `ground_truth_rules.toon` template (now dynamically resolved for full portability).
+5. **Project Gap Synthesis:** Any unique project requirements are synthesized into a `project_specific_pack`.
+6. **Final Output:** A complete `.assistant_rules.toon` file is generated, acting as the "Project Constitution".
 
 ## 📦 Installation
 

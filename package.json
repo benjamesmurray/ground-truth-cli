@@ -1,6 +1,6 @@
 {
   "name": "ground-truth-cli",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Agent-Native MCP Project Scanner",
   "type": "module",
   "main": "dist/index.js",
@@ -10,9 +10,11 @@
     "prepare": "npm run build"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.1"
+    "@modelcontextprotocol/sdk": "^1.0.1",
+    "glob": "^13.0.6"
   },
   "devDependencies": {
+    "@types/glob": "^8.1.0",
     "@types/node": "^20.11.24",
     "typescript": "^5.3.3"
   }

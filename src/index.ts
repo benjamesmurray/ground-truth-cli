@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * ground-truth-cli MCP Server (v1.1.1)
+ * ground-truth-cli MCP Server (v1.1.2)
  * 
  * An Agent-Native project scanner that synthesizes "Ground Truth" rules.
  * Enhanced for monorepos, modern test runtimes (Bun, Playwright), 
@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "ground-truth-cli",
-    version: "1.1.1",
+    version: "1.1.2",
   },
   {
     capabilities: {
@@ -47,16 +47,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         name: "gt_refresh",
         description: "A parameterless tool to quickly refresh project rules and the .assistant_rules.toon file.",
         inputSchema: { type: "object", properties: {} },
-      },
-      {
-        name: "gt_help",
-        description: "Pull deep documentation for a specific feature or command.",
-        inputSchema: {
-          type: "object",
-          properties: {
-            topic: { type: "string", description: "The topic (e.g., 'scan', 'toon', 'rules')." },
-          },
-        },
       },
       {
         name: "gt_exec",
@@ -160,7 +150,7 @@ async function gatherContext(dir: string) {
 async function synthesizeRules(targetDir: string) {
   const ctx = await gatherContext(targetDir);
   
-  // Resolve path relative to THIS script
+  // Resolve path relative to THIS script (V1.1.0 Fix)
   const templatePath = path.resolve(__dirname, "..", "ground_truth_rules.toon");
   let rulesToon = await fs.readFile(templatePath, "utf-8");
 
@@ -174,7 +164,7 @@ async function synthesizeRules(targetDir: string) {
   rulesToon = rulesToon.replace("[DYNAMIC: CURRENT SESSION GOAL]", "Project Optimization and Rule Synthesis");
 
   const specificPack = `
-ZONE 2: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
+ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
 project_specific_pack:
   - rule:
       Trigger: When performing a multi-file refactor or implementing new features
@@ -209,27 +199,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   switch (name) {
     case "gt_status": {
       try {
-        const rules = await fs.readFile(path.join(".", ".assistant_rules.toon"), "utf-8");
+        const content = await fs.readFile(".assistant_rules.toon", "utf-8");
         return {
-          content: [{ type: "text", text: rules }],
+          content: [{ type: "text", text: content }],
         };
       } catch (e) {
-        // Auto-synthesize if the rules file is missing
-        const output = await synthesizeRules(".");
         return {
-          content: [{ type: "text", text: output }],
+          content: [{ 
+            type: "text", 
+            text: `Project: ground-truth-cli (v1.1.2) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
+          }],
         };
       }
     }
 
-    case "gt_refresh": {
-      const output = await synthesizeRules(".");
+    case "gt_refresh":
+      await synthesizeRules(".");
       return {
-        content: [{ type: "text", text: output }],
+        content: [{ type: "text", text: "Successfully refreshed .assistant_rules.toon based on current workspace context." }],
       };
-    }
 
-    case "gt_exec": {
+    case "gt_exec":
       if (args?.action === "scan") {
         const targetDir = (args.resource as string) || ".";
         const output = await synthesizeRules(targetDir);
@@ -241,18 +231,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
       return { content: [{ type: "text", text: "Invalid action." }], isError: true };
-    }
-
-    case "gt_help": {
-      const topic = (args?.topic as string) || "general";
-      let helpText = "Ground Truth CLI Help:\nUse gt_exec scan [dir] or gt_refresh to initialize project rules.";
-      if (topic === "scan") {
-        helpText = "Action: scan\nUsage: gt_exec scan .\nDescription: Analyzes project structure, stack, and guidelines to generate .assistant_rules.toon.";
-      }
-      return {
-        content: [{ type: "text", text: helpText }],
-      };
-    }
 
     default:
       throw new Error(`Unknown tool: ${name}`);
@@ -262,7 +240,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Ground Truth CLI MCP server (v1.1.1) running on stdio");
+  console.error("Ground Truth CLI MCP server (v1.1.2) running on stdio");
 }
 
 main().catch(console.error);

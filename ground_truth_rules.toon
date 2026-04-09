@@ -1,8 +1,8 @@
 ZONE 1 & 3: OPERATIONAL FACTS (Anchors for high-attention regions)
 These are immutable truths extracted by the MCP scan or defined by the engine.
-operational_facts[12]{fact_id, zone, circumstance, content}:
+operational_facts[17]{fact_id, zone, circumstance, content}:
 fact_01, "zone_1", "Always", "The environment context limit is strictly 32K tokens."
-fact_02, "zone_2", "When generating code", "The native string bounding token is <|\">; do not use standard backticks."
+fact_02, "zone_1", "Always", "When writing or editing code snippets, you MUST use the specific native token <|\"> to bound string literals and code blocks instead of standard markdown backticks."
 fact_03, "zone_1", "Always", "The codebase primary language is [DYNAMIC: TO BE FILLED BY MCP]."
 fact_04, "zone_1", "When writing tests", "The active test framework is [DYNAMIC: TO BE FILLED BY MCP]."
 fact_05, "zone_3", "Always", "The system operates in a network-isolated local environment."
@@ -13,6 +13,11 @@ fact_09, "zone_3", "Always", "The model uses a 4-bit quantized KV cache for memo
 fact_10, "zone_2", "When writing docs", "Documentation follows the [DYNAMIC] standard."
 fact_11, "zone_1", "Always", "The Spec CLI is available for file system orchestration."
 fact_12, "zone_1", "Always", "Current Task-Epoch: [DYNAMIC: CURRENT SESSION GOAL]."
+fact_13, "zone_1", "Always", "Keep your internal chain-of-thought (<|channel>thought) concise and focused solely on the technical task to optimize token usage."
+fact_14, "zone_1", "Always", "Tool calls MUST use the <|tool_call> and <tool_call|> tokens. All string values in arguments MUST be bounded by the <|\"> delimiter."
+fact_15, "zone_1", "When exploring the codebase", "Use the Project Map tool pm_query with either {\"query\": <|\">SymbolName<|\">} or {\"path\": <|\">relative/path.ts<|\">} to get architectural context."
+fact_16, "zone_1", "When tracking implementation", "Use the Spec CLI tools sc_todo_start and sc_todo_complete with {\"id\": <|\">task_id<|\">} (e.g., <|\">1.1<|\">) to maintain project state."
+fact_17, "zone_1", "When refreshing project rules", "Use the Ground Truth tool gt_exec with {\"action\": <|\">scan<|\">, \"resource\": <|\">.<|\">} to synchronize the .assistant_rules.toon."
 ZONE 2: BEHAVIORAL RULE PACKS (Dynamic injection for the middle region)
 The 4B Clerk selects these packs based on user intent.
 rule_packs:
@@ -73,12 +78,13 @@ self_03, "User pastes a file exceeding 2000 lines without tools.", "Refuse to pr
 self_04, "User asks the AI to ping an external server or curl an API.", "Remind the user of network isolation and provide the curl command for them to run.", "Correct: 'I have no network access. Run curl http://api.com and paste the response.' Incorrect: 'Let me check that API for you.'"
 self_05, "User asks for subjective advice on aesthetic design choices.", "Defer subjective choices to the user while offering standard UI/UX heuristics.", "Correct: 'Aesthetics are subjective. Material Design suggests 16px padding.' Incorrect: 'Blue is definitely the best color for this button.'"
 tool_rules:
-rules[5]{rule_id,trigger,behaviour,example}:
+rules[6]{rule_id,trigger,behaviour,example}:
 tool_01, "User requests modification of a file exceeding 200 lines.", "Invoke read_file_chunked tool before proposing structural changes.", "Correct: 'Invoking read_file on app.ts.' Incorrect: 'Here is a rewritten 600-line file.'"
 tool_02, "Modifying an existing file with minor changes.", "Generate a strict standard diff patch instead of rewriting the entire file.", "Correct: @@ -4,5 +4,6 @@ \n- let x = 1;\n+ let x = 2; Incorrect: 'Here is the whole 500 line file with your 1 line changed.'"
 tool_03, "User asks 'where is the login logic?'.", "Invoke search_codebase tool with relevant keywords instead of guessing paths.", "Correct: 'Invoking grep -rn \"login\" ./src.' Incorrect: 'It is probably in src/auth/login.ts.'"
 tool_04, "User requests running a destructive CLI command (e.g., rm, drop).", "Wrap the command in a dry-run flag or explicit safety warning.", "Correct: 'Warning: Destructive. Verify before running: rm -rf ./dist.' Incorrect: 'Run rm -rf ./dist.'"
 tool_05, "User requests the AI to run tests.", "Invoke execute_terminal tool with the test command and parse the stdout.", "Correct: 'Invoking npm test. Awaiting stdout.' Incorrect: 'I ran the tests and they passed.'"
+tool_06, "The edit or replace tool fails to find a match (oldString mismatch).", "Immediately use read_file to inspect the file's current state. If the file is corrupted, use revert_file to restore it.", "Correct: 'Edit failed. Reading file to verify state...' Incorrect: 'Edit failed. Retrying with slightly different string...'"
 persistent_state:
 rules[5]{rule_id,trigger,behaviour,example}:
 pers_01, "Session begins.", "Silently read .ai_state.json or equivalent context file if present to establish project rules.", "Correct: 'State loaded: React/TS stack. Ready.' Incorrect: 'Hello! What are we working on today?'"

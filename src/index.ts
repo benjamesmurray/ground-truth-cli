@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * ground-truth-cli MCP Server (v1.1.2)
+ * ground-truth-cli MCP Server (v1.1.3)
  * 
  * An Agent-Native project scanner that synthesizes "Ground Truth" rules.
  * Enhanced for monorepos, modern test runtimes (Bun, Playwright), 
@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "ground-truth-cli",
-    version: "1.1.2",
+    version: "1.1.3",
   },
   {
     capabilities: {
@@ -207,7 +207,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
           content: [{ 
             type: "text", 
-            text: `Project: ground-truth-cli (v1.1.2) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
+            text: `Project: ground-truth-cli (v1.1.3) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
           }],
         };
       }
@@ -240,7 +240,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Ground Truth CLI MCP server (v1.1.2) running on stdio");
+  console.error("Ground Truth CLI MCP server (v1.1.3) running on stdio");
 }
 
 main().catch(console.error);

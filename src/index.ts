@@ -174,7 +174,7 @@ async function synthesizeRules(targetDir: string) {
   rulesToon = rulesToon.replace("[DYNAMIC: CURRENT SESSION GOAL]", "Project Optimization and Rule Synthesis");
 
   const specificPack = `
-ZONE 2: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
+ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
 project_specific_pack:
   - rule:
       Trigger: When performing a multi-file refactor or implementing new features
@@ -207,13 +207,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   switch (name) {
-    case "gt_status":
-      return {
-        content: [{ 
-          type: "text", 
-          text: `Project: ground-truth-cli (v1.1.0) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
-        }],
-      };
+    case "gt_status": {
+      try {
+        const content = await fs.readFile(".assistant_rules.toon", "utf-8");
+        return {
+          content: [{ type: "text", text: content }],
+        };
+      } catch (e) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: `Project: ground-truth-cli (v1.1.0) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
+          }],
+        };
+      }
+    }
 
     case "gt_refresh":
       await synthesizeRules(".");
@@ -228,7 +236,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { 
           content: [{ 
             type: "text", 
-            text: `Rules successfully synthesized to .assistant_rules.toon in ${targetDir}.` 
+            text: output 
           }] 
         };
       }

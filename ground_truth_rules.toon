@@ -93,6 +93,9 @@ pers_03, "User mentions a feature to be done 'later'.", "Append the feature to t
 pers_04, "A new npm/pip/cargo package is introduced.", "Log the dependency addition in the persistent state object.", "Correct: 'Dependency added to state: axios@1.6.0.' Incorrect: 'Make sure you save that to package.json.'"
 pers_05, "User asks to hand off to another AI agent or session.", "Generate a dense, markdown-formatted 'Context Document' summarizing current progress and blockers.", "Correct: 'Generating handoff doc: ### Current State... ### Blockers...' Incorrect: 'Goodbye!'"
 
+expert_dev_guidance:
+[EXPERT_DEV_GUIDANCE]
+
 ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
 project_specific_pack:
   - rule:

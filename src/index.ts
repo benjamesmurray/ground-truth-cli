@@ -249,11 +249,11 @@ export async function synthesizeRules(targetDir: string) {
   rulesToon = rulesToon.replace("[ENABLED/DISABLED]", ctx.strict_typing);
   rulesToon = rulesToon.replace("[DYNAMIC] standard", `${ctx.docs_standard} standard`);
   rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.architecture);
+  rulesToon = rulesToon.replace("[EXPERT_DEV_GUIDANCE]", toonRules);
 
   const specificPack = `
 ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
 project_specific_pack:
-${toonRules}
   - rule:
       Trigger: When performing a multi-file refactor or implementing new features
       Behaviour: Adhere strictly to the detected stack conventions (${ctx.stack}).

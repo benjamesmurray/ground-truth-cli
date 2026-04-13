@@ -18,8 +18,8 @@ This server follows the **Agent-Native** architecture pattern:
 | `gt_help` | Learn | Pulls deep documentation for specific topics (e.g., `scan`, `rules`). |
 | `gt_exec` | Act | The workhorse tool. Usage: `gt_exec scan <path>`. |
 
-## 🧩 Ground Truth Methodology (9 Cognitive Domains)
-The scanner leverages a permanent rule library (`ground_truth_rules.toon`) covering 9 critical cognitive domains:
+## 🧩 Ground Truth Methodology (10 Cognitive Domains)
+The scanner leverages a permanent rule library (`ground_truth_rules.toon`) covering 10 critical cognitive domains:
 1. **Epistemic Integrity:** Validating knowledge and dependencies.
 2. **Reasoning Discipline:** Planning and root-cause analysis.
 3. **Memory Integrity:** Session-long consistency and state.
@@ -29,6 +29,7 @@ The scanner leverages a permanent rule library (`ground_truth_rules.toon`) cover
 7. **Self-Awareness:** Understanding environment limits (No-Execution).
 8. **Tool Rules:** Proper invocation of file/search operations.
 9. **Persistent State:** Managing TODOs and session handoffs.
+10. **Expert Dev Guidance:** Dynamic injection of language/framework rules.
 
 ### Rule Format
 Each rule follows a strict 3-part schema:

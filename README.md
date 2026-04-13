@@ -1,4 +1,4 @@
-# ground-truth-cli (v1.1.3)
+# ground-truth-cli (v1.1.4)
 
 An **Agent-Native** Model Context Protocol (MCP) server designed for project initialization and "Ground Truth" rule synthesis. It streamlines the onboarding process for AI coding assistants by scanning project context and generating rigid behavioural constraints in Token-Oriented Object Notation (TOON).
 
@@ -36,7 +36,7 @@ Each rule follows a strict 3-part schema:
 2. **Behaviour:** The rigid constraint (e.g., "You must use JSDoc for all parameters.").
 3. **Example:** Correct vs. Incorrect illustrations using native string bounding tokens `<|">`.
 
-## 🔄 The Scanning Pipeline (V1.1.3)
+## 🔄 The Scanning Pipeline (V1.1.4)
 When `gt_exec scan .` or `gt_refresh` is invoked:
 1. **Multi-Language Discovery:** The server detects the primary project language (TypeScript, Vue, Rust, Go, Python, Kotlin).
 2. **Architecture Mapping:** Automatically identifies the project's architectural domain (e.g., Next.js App Router, Axum Web Microservices, Kafka Event-Driven, etc.) based on dependency fingerprints.

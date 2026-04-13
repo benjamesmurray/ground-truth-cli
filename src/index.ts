@@ -69,7 +69,17 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
  */
 async function gatherContext(dir: string) {
   const absoluteDir = path.resolve(dir);
-  const context = {
+  const context: {
+    language: string;
+    test_framework: string;
+    build_system: string;
+    strict_typing: string;
+    docs_standard: string;
+    guidelines: string;
+    stack: Set<string>;
+    project_root: string;
+    architecture: string;
+  } = {
     language: "JavaScript/TypeScript",
     test_framework: "Unknown",
     build_system: "npm",
@@ -78,13 +88,26 @@ async function gatherContext(dir: string) {
     guidelines: "",
     stack: new Set<string>(),
     project_root: absoluteDir,
+    architecture: "Unknown",
   };
 
-  // 1. Monorepo-Aware Dependency Aggregation
+  // 1. Language & Monorepo-Aware Dependency Aggregation
   const pkgFiles = await glob("**/package.json", { 
     cwd: absoluteDir, 
     ignore: ["**/node_modules/**", "**/dist/**"] 
   });
+
+  if (pkgFiles.length > 0) {
+    context.language = "JavaScript/TypeScript";
+  } else if (await glob("**/go.mod", { cwd: absoluteDir })) {
+    context.language = "Go";
+  } else if (await glob("**/Cargo.toml", { cwd: absoluteDir })) {
+    context.language = "Rust";
+  } else if (await glob("**/requirements.txt", { cwd: absoluteDir }) || await glob("**/pyproject.toml", { cwd: absoluteDir })) {
+    context.language = "Python";
+  } else if (await glob("**/*.kt", { cwd: absoluteDir })) {
+    context.language = "Kotlin";
+  }
 
   const allDeps: Record<string, string> = {};
   for (const pkgFile of pkgFiles) {
@@ -95,14 +118,14 @@ async function gatherContext(dir: string) {
     } catch (e) {}
   }
 
-  // 2. Broad Ecosystem Heuristics
+  // 2. Broad Ecosystem & Architecture Heuristics
   // Test Frameworks
   if (allDeps.jest) context.test_framework = "Jest";
   else if (allDeps.vitest) context.test_framework = "Vitest";
   else if (allDeps.mocha) context.test_framework = "Mocha";
   else if (allDeps["@playwright/test"]) context.test_framework = "Playwright (E2E)";
   else if (allDeps.cypress) context.test_framework = "Cypress (E2E)";
-  else if (allDeps.ava) context.test_framework = "AVA";
+  else if (allDeps.api) context.test_framework = "AVA";
   else if (allDeps["@types/bun"] || allDeps["bun-types"]) context.test_framework = "Bun Native Testing";
 
   // Build Systems & Frameworks
@@ -113,6 +136,37 @@ async function gatherContext(dir: string) {
   if (allDeps["solid-js"]) context.stack.add("Solid.js");
   if (allDeps.effect) context.stack.add("Effect-ts");
   if (allDeps["@effect/io"]) context.stack.add("Effect-ts");
+
+  // Architecture Detection
+  if (context.language === "JavaScript/TypeScript") {
+    if (allDeps.next) context.architecture = "NextJS_App_Router";
+    else if (allDeps.vue && allDeps.nuxt) context.architecture = "Nuxt_Hybrid_Island_Topology";
+    else if (allDeps.vue) context.architecture = "Modern_DOM_Compiler_Ergonomics";
+    else if (allDeps.fastify) context.architecture = "Fastify_High_Performance_API";
+    else if (allDeps["@aws-sdk/client-s3"] || allDeps["aws-lambda"]) context.architecture = "AWS_Lambda_Serverless";
+    else if (allDeps["@modelcontextprotocol/sdk"]) context.architecture = "Agentic_Orchestration";
+  } else if (context.language === "Rust") {
+    if (allDeps.tokio && allDeps.axum) context.architecture = "Asynchronous_Web_Microservices";
+    else if (allDeps.clap) context.architecture = "Command_Line_Interfaces";
+    else if (allDeps.rayon || allDeps.polars) context.architecture = "High_Performance_Parallel_Data";
+    // Detect no_std via Cargo.toml inspection
+    try {
+      const cargoTomls = await glob("**/Cargo.toml", { cwd: absoluteDir });
+      for (const f of cargoTomls) {
+        const content = await fs.readFile(path.join(absoluteDir, f), "utf-8");
+        if (content.includes("default-features = false") || content.includes("no_std")) {
+          context.architecture = "Embedded_Bare_Metal_no_std";
+          break;
+        }
+      }
+    } catch {}
+  } else if (context.language === "Go") {
+    if (allDeps["github.com/segmentio/kafka-go"] || allDeps["github.com/confluentinc/confluent-kafka-go"]) context.architecture = "Kafka_Event_Driven";
+  } else if (context.language === "Python") {
+    if (allDeps.fastapi) context.architecture = "Async_Microservices_FastAPI";
+    else if (allDeps.polars) context.architecture = "Event_Driven_Data_Pipelines";
+    else if (allDeps.taskiq) context.architecture = "Stateful_Agentic_Workflows";
+  }
 
   Object.keys(allDeps).slice(0, 20).forEach(d => context.stack.add(d));
 
@@ -147,12 +201,45 @@ async function gatherContext(dir: string) {
 /**
  * Sequential Placeholder Injection Logic
  */
-async function synthesizeRules(targetDir: string) {
+export async function synthesizeRules(targetDir: string) {
   const ctx = await gatherContext(targetDir);
   
   // Resolve path relative to THIS script (V1.1.0 Fix)
   const templatePath = path.resolve(__dirname, "..", "ground_truth_rules.toon");
   let rulesToon = await fs.readFile(templatePath, "utf-8");
+
+  // Load rules from .toon files
+  let toonRules = "";
+  let toonFileName = ctx.language.toLowerCase() + ".toon";
+  if (ctx.language === "JavaScript/TypeScript") {
+    toonFileName = ctx.stack.includes("vue") || ctx.stack.includes("nuxt") ? "vue.toon" : "typescript.toon";
+  }
+  
+  const toonPath = path.resolve(__dirname, "..", toonFileName);
+  try {
+    const toonContent = await fs.readFile(toonPath, "utf-8");
+    const toonData = JSON.parse(toonContent);
+    const ruleIds = toonData.architecture_map[ctx.architecture] || [];
+    const rules = toonData.rule_registry.filter((r: any) => ruleIds.includes(r.id));
+    
+    toonRules = rules.map((r: any) => `
+  - rule:
+      id: ${r.id}
+      Trigger: ${r.trigger}
+      Behaviour: ${r.behavior}
+      Example:
+        Correct:
+        <|">
+        ${r.example.correct}
+        <|">
+        Incorrect:
+        <|">
+        ${r.example.incorrect}
+        <|">
+`).join("\n");
+  } catch (e) {
+    // Silently continue if toon file or architecture map is missing
+  }
 
   // Sequentially replace dynamic placeholders
   rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.language);
@@ -161,11 +248,12 @@ async function synthesizeRules(targetDir: string) {
   rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.build_system);
   rulesToon = rulesToon.replace("[ENABLED/DISABLED]", ctx.strict_typing);
   rulesToon = rulesToon.replace("[DYNAMIC] standard", `${ctx.docs_standard} standard`);
-  rulesToon = rulesToon.replace("[DYNAMIC: CURRENT SESSION GOAL]", "Project Optimization and Rule Synthesis");
+  rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.architecture);
 
   const specificPack = `
 ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
 project_specific_pack:
+${toonRules}
   - rule:
       Trigger: When performing a multi-file refactor or implementing new features
       Behaviour: Adhere strictly to the detected stack conventions (${ctx.stack}).

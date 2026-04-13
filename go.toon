@@ -1,0 +1,114 @@
+{
+  "rule_registry": [
+    {
+      "id": "Go-001",
+      "trigger": "Any function invocation that returns an error type requiring evaluation.",
+      "behavior": "Evaluate errors explicitly. Never discard errors using the blank identifier _. If an if-statement handles an error and terminates execution (return, break, continue, goto), omit the subsequent else block. Handle errors exactly once; do not log and return the same error.",
+      "example": {
+        "incorrect": "f, err := os.Open(name)\nif err != nil {\n    log.Printf(\"Failed to open: %v\", err)\n    return err\n} else {\n    return process(f)\n}",
+        "correct": "f, err := os.Open(name)\nif err != nil {\n    return fmt.Errorf(\"failed to open configuration file %s: %w\", name, err)\n}\ndefer f.Close()\nreturn process(f)"
+      }
+    },
+    {
+      "id": "Go-002",
+      "trigger": "Deploying a go func() literal inside a for loop, or invoking an asynchronous worker pool.",
+      "behavior": "Assume Go 1.22+ semantics where loop variables are scoped per iteration. Prohibit legacy shadow variables (v := v). Orchestrate execution using sync.WaitGroup, invoking wg.Add(1) before the closure and defer wg.Done() immediately inside.",
+      "example": {
+        "incorrect": "for _, task := range tasks {\n    task := task\n    go func() {\n        process(task)\n    }()\n}",
+        "correct": "var wg sync.WaitGroup\nfor _, task := range tasks {\n    wg.Add(1)\n    go func(t Task) {\n        defer wg.Done()\n        process(t)\n    }(task)\n}\nwg.Wait()"
+      }
+    },
+    {
+      "id": "Go-003",
+      "trigger": "Instantiating timeouts via context.WithTimeout/Deadline, or storing metadata via context.WithValue.",
+      "behavior": "Pass context.Context explicitly as the first parameter; never embed it structurally. Immediately invoke defer cancel() after WithTimeout/Deadline. Use unexported custom types for context.WithValue keys to prevent collisions.",
+      "example": {
+        "incorrect": "ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)\nctx = context.WithValue(ctx, \"trace_id\", \"123\")\ndb.Query(ctx, query)",
+        "correct": "type traceIDKey struct{}\n\nctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)\ndefer cancel()\n\nctx = context.WithValue(ctx, traceIDKey{}, \"123\")\nif err := db.Query(ctx, query); err != nil {\n    return err\n}"
+      }
+    },
+    {
+      "id": "Go-004",
+      "trigger": "Declaration, assignment, or parameter passing of Go interfaces.",
+      "behavior": "Pass interfaces strictly by value. Never use pointers to interfaces (*Interface). Enforce compile-time interface compliance assertions using a blank identifier assignment.",
+      "example": {
+        "incorrect": "type Repository interface { Save() }\nfunc HandleRequest(repo *Repository) {}",
+        "correct": "type Repository interface { Save() }\ntype PostgresRepo struct{}\nfunc (p *PostgresRepo) Save() {}\n\nvar _ Repository = (*PostgresRepo)(nil)\n\nfunc HandleRequest(repo Repository) {}"
+      }
+    },
+    {
+      "id": "Go-005",
+      "trigger": "Requirement to store, compare, or deduplicate large datasets with repetitive strings/comparable types (Go 1.23+).",
+      "behavior": "Prohibit bespoke map-based interning caches. Implement memory deduplication using the standard unique package. Wrap values in a unique.Handle generated via unique.Make(value).",
+      "example": {
+        "incorrect": "var stringCache = make(map[string]string)\nfunc intern(s string) string { /* ... */ }",
+        "correct": "import \"unique\"\ntype InternedString unique.Handle[string]\nfunc CacheString(s string) InternedString {\n    return InternedString(unique.Make(s))\n}"
+      }
+    },
+    {
+      "id": "Go-006",
+      "trigger": "Designing custom collections or sequence generators requiring traversal (Go 1.23+).",
+      "behavior": "Abandon channel-based streaming for synchronous iteration. Leverage the iter package, returning iter.Seq[V] or iter.Seq2[K, V] to support native range-over-func semantics.",
+      "example": {
+        "incorrect": "func (c *Collection) Iterate() <-chan string {\n    ch := make(chan string)\n    go func() { /* send */ }()\n    return ch\n}",
+        "correct": "import \"iter\"\nfunc (c *Collection) All() iter.Seq[string] {\n    return func(yield func(string) bool) {\n        for _, val := range c.data {\n            if !yield(val) { return }\n        }\n    }\n}"
+      }
+    },
+    {
+      "id": "Go-007",
+      "trigger": "Definition of structs representing shared concurrent state or caches.",
+      "behavior": "Declare mutexes as non-pointer zero-values (mu sync.Mutex) to guarantee validity. Keep mutex fields unexported. Use defer mu.Unlock() immediately after locking.",
+      "example": {
+        "incorrect": "type State struct { Mu *sync.Mutex; counter int }",
+        "correct": "type State struct {\n    mu      sync.Mutex\n    counter int\n}\n\nfunc (s *State) Increment() {\n    s.mu.Lock()\n    defer s.mu.Unlock()\n    s.counter++\n}"
+      }
+    },
+    {
+      "id": "Go-008",
+      "trigger": "Returning internal slices/maps from exported getters or setting internal state.",
+      "behavior": "Copy slices and maps at API boundaries to prevent unauthorized external mutation. Use make and copy() for slices; iterate and clone for maps.",
+      "example": {
+        "incorrect": "func (c *Config) GetHosts() []string { return c.hosts }",
+        "correct": "func (c *Config) GetHosts() []string {\n    cp := make([]string, len(c.hosts))\n    copy(cp, c.hosts)\n    return cp\n}"
+      }
+    },
+    {
+      "id": "Go-009",
+      "trigger": "Generation of security keys, random tokens, hashing, or KDFs.",
+      "behavior": "Forbidden to use math/rand for security; use crypto/rand. Use Go 1.24+ native libraries: crypto/mlkem for KEM and crypto/hkdf or crypto/pbkdf2 for derivation.",
+      "example": {
+        "incorrect": "import \"math/rand\"\nfunc gen() int { return rand.Int() }",
+        "correct": "import \"crypto/rand\"\nfunc gen() ([]byte, error) {\n    b := make([]byte, 32)\n    _, err := rand.Read(b)\n    return b, err\n}"
+      }
+    }
+  ],
+  "architecture_map": {
+    "Hexagonal_DDD_Microservice": [
+      "Go-001",
+      "Go-003",
+      "Go-004",
+      "Go-007",
+      "Go-008"
+    ],
+    "Kafka_Event_Driven": [
+      "Go-001",
+      "Go-002",
+      "Go-003",
+      "Go-007",
+      "Go-009"
+    ],
+    "High_Concurrency_Pipeline": [
+      "Go-002",
+      "Go-005",
+      "Go-006",
+      "Go-007"
+    ],
+    "API_Gateway": [
+      "Go-001",
+      "Go-003",
+      "Go-004",
+      "Go-008",
+      "Go-009"
+    ]
+  }
+}

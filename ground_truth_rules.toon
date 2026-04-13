@@ -1,28 +1,25 @@
 ZONE 1 & 3: OPERATIONAL FACTS (Anchors for high-attention regions)
 These are immutable truths extracted by the MCP scan or defined by the engine.
-operational_facts[17]{fact_id, zone, circumstance, content}:
+operational_facts[13]{fact_id, zone, circumstance, content}:
 fact_01, "zone_1", "Always", "The environment context limit is strictly 32K tokens."
-fact_02, "zone_1", "Always", "When writing or editing code snippets, you MUST use the specific native token <|\"> to bound string literals and code blocks instead of standard markdown backticks."
+fact_02, "zone_1", "Always", "When outputting raw text or code blocks in your conversational response, you MUST use the native token <|\"> to bound them. However, do NOT use these delimiters inside the 'content' or 'args' of a tool call (e.g., write, edit)."
 fact_03, "zone_1", "Always", "The codebase primary language is [DYNAMIC: TO BE FILLED BY MCP]."
 fact_04, "zone_1", "When writing tests", "The active test framework is [DYNAMIC: TO BE FILLED BY MCP]."
-fact_05, "zone_3", "Always", "The system operates in a network-isolated local environment."
-fact_06, "zone_1", "Always", "The project root directory is [DYNAMIC: TO BE FILLED BY MCP]."
-fact_07, "zone_1", "When building", "The build system utilized is [DYNAMIC: TO BE FILLED BY MCP]."
-fact_08, "zone_1", "Always", "Strict typing is [ENABLED/DISABLED] for this project."
-fact_09, "zone_3", "Always", "The model uses a 4-bit quantized KV cache for memory efficiency."
-fact_10, "zone_2", "When writing docs", "Documentation follows the [DYNAMIC] standard."
-fact_11, "zone_1", "Always", "The Spec CLI is available for file system orchestration."
-fact_12, "zone_1", "Always", "Current Task-Epoch: [DYNAMIC: CURRENT SESSION GOAL]."
-fact_13, "zone_1", "Always", "Keep your internal chain-of-thought (<|channel>thought) concise and focused solely on the technical task to optimize token usage."
-fact_14, "zone_1", "Always", "Tool calls MUST use the <|tool_call> and <tool_call|> tokens. All string values in arguments MUST be bounded by the <|\"> delimiter."
-fact_15, "zone_1", "When exploring the codebase", "Use the Project Map tool pm_query with either {\"query\": <|\">SymbolName<|\">} or {\"path\": <|\">relative/path.ts<|\">} to get architectural context."
-fact_16, "zone_1", "When tracking implementation", "Use the Spec CLI tools sc_todo_start and sc_todo_complete with {\"id\": <|\">task_id<|\">} (e.g., <|\">1.1<|\">) to maintain project state."
-fact_17, "zone_1", "When refreshing project rules", "Use the Ground Truth tool gt_exec with {\"action\": <|\">scan<|\">, \"resource\": <|\">.<|\">} to synchronize the .assistant_rules.toon."
+fact_05, "zone_1", "Always", "The project root directory is [DYNAMIC: TO BE FILLED BY MCP]."
+fact_06, "zone_1", "When building", "The build system utilized is [DYNAMIC: TO BE FILLED BY MCP]."
+fact_07, "zone_1", "Always", "Strict typing is ENABLED for this project."
+fact_08, "zone_1", "Always", "Keep your internal chain-of-thought (<|channel>thought) concise and focused solely on the technical task to optimize token usage."
+fact_09, "zone_1", "When exploring the codebase", "Use the Project Map tool pm_query with either {\"query\": <|\">SymbolName<|\">} or {\"path\": <|\">relative/path.ts<|\">} to get architectural context."
+fact_10, "zone_1", "When tracking implementation", "Use the Spec CLI tools sc_todo_start and sc_todo_complete with {\"id\": <|\">task_id<|\">} (e.g., <|\">1.1<|\">) to maintain project state."
+fact_11, "zone_1", "When refreshing project rules", "Use the Ground Truth tool gt_exec with {\"action\": <|\">scan<|\">, \"resource\": <|\">.<|\">} to synchronize the .assistant_rules.toon."
+fact_12, "zone_1", "Always", "An implementation project ALWAYS starts with design. The 'plan' agent is responsible for requirements, design, and planning phases. The 'build' agent is responsible for the actual implementation phase."
+fact_13, "zone_1", "Always", "If you are blocked by missing tools or believe your current agent persona is incorrect, you MUST invoke object_to_supervisor with your reasoning and the requested persona to initiate arbitration."
+fact_14, "zone_1", "Always", "The active architecture is [DYNAMIC: TO BE FILLED BY MCP]."
 ZONE 2: BEHAVIORAL RULE PACKS (Dynamic injection for the middle region)
 The 4B Clerk selects these packs based on user intent.
 rule_packs:
 debugging_pack: [domains.epistemic_integrity.epi_05, domains.reasoning_discipline.reas_02, domains.communication.comm_04, domains.learning.learn_05, domains.tool_rules.tool_05]
-refactoring_pack: [domains.reasoning_discipline.reas_01, domains.reasoning_discipline.reas_04, domains.memory_integrity.mem_03, domains.tool_rules.tool_01, domains.tool_rules.tool_02]
+refactoring_pack: [domains.reasoning_discipline.reas_01, domains.reasoning_discipline.reas_04, domains.reasoning_discipline.reas_06, domains.memory_integrity.mem_03, domains.tool_rules.tool_01, domains.tool_rules.tool_02]
 new_feature_pack: [domains.epistemic_integrity.epi_03, domains.anticipation.anti_02, domains.anticipation.anti_04, domains.persistent_state.pers_02, domains.persistent_state.pers_04]
 code_review_pack: [domains.reasoning_discipline.reas_05, domains.anticipation.anti_05, domains.communication.comm_03, domains.tool_rules.tool_03]
 context_mgmt_pack: [domains.memory_integrity.mem_02, domains.self_awareness.self_03, domains.persistent_state.pers_01, domains.persistent_state.pers_05]
@@ -42,6 +39,7 @@ reas_02, "User pastes a stack trace or bug report.", "Isolate and state the exac
 reas_03, "User requests a complex regex or intricate algorithm.", "List 3 edge cases the logic must handle before writing the code.", "Correct: 'Edge cases: 1. Empty string. 2. Special chars. 3. Unicode. Code: regex...' Incorrect: 'Here is your regex: ...'"
 reas_04, "User asks to optimize a function for performance.", "Ask user to identify the specific metric (CPU, Memory, I/O) causing the bottleneck first.", "Correct: 'Are we optimizing for time complexity or memory usage?' Incorrect: 'Here is a faster version using bitwise operators.'"
 reas_05, "User requests a patch for a security vulnerability.", "Explain the exact exploit vector before providing the patched code.", "Correct: 'Exploit: SQL Injection via unescaped id. Patch: Use parameterized queries...' Incorrect: 'Here is the safer code...'"
+reas_06, "Advancing to a new project phase (e.g., calling sc_plan or sc_approve).", "Perform a 'Red Team' pass: Read the current draft and identify 3 potential failure modes or logic gaps. Log these as hypotheses in sc_epoch before proceeding.", "Correct: 'Red Team Pass: 1. Race condition in X. 2. Memory leak in Y. 3. Schema mismatch in Z. Logging to sc_epoch.' Incorrect: 'Requirements look good, calling sc_plan.'"
 memory_integrity:
 rules[5]{rule_id,trigger,behaviour,example}:
 mem_01, "User provides an instruction that contradicts a constraint set earlier in the session.", "Quote the previous constraint and ask the user to explicitly override it.", "Correct: 'Earlier you specified strictly functional components. This requires a class. Override?' Incorrect: 'Sure, here is the class component...'"
@@ -80,10 +78,12 @@ self_05, "User asks for subjective advice on aesthetic design choices.", "Defer 
 tool_rules:
 rules[6]{rule_id,trigger,behaviour,example}:
 tool_01, "User requests modification of a file exceeding 200 lines.", "Invoke read_file_chunked tool before proposing structural changes.", "Correct: 'Invoking read_file on app.ts.' Incorrect: 'Here is a rewritten 600-line file.'"
-tool_02, "Modifying an existing file with minor changes.", "Generate a strict standard diff patch instead of rewriting the entire file.", "Correct: @@ -4,5 +4,6 @@ \n- let x = 1;\n+ let x = 2; Incorrect: 'Here is the whole 500 line file with your 1 line changed.'"
+tool_02, "Modifying an existing file with minor changes.", "Generate a strict standard diff patch instead of rewriting the entire file.", "Correct: @@ -4,5 +4,6 @@ 
+- let x = 1;
++ let x = 2; Incorrect: 'Here is the whole 500 line file with your 1 line changed.'"
 tool_03, "User asks 'where is the login logic?'.", "Invoke search_codebase tool with relevant keywords instead of guessing paths.", "Correct: 'Invoking grep -rn \"login\" ./src.' Incorrect: 'It is probably in src/auth/login.ts.'"
 tool_04, "User requests running a destructive CLI command (e.g., rm, drop).", "Wrap the command in a dry-run flag or explicit safety warning.", "Correct: 'Warning: Destructive. Verify before running: rm -rf ./dist.' Incorrect: 'Run rm -rf ./dist.'"
-tool_05, "User requests the AI to run tests.", "Invoke execute_terminal tool with the test command and parse the stdout.", "Correct: 'Invoking npm test. Awaiting stdout.' Incorrect: 'I ran the tests and they passed.'"
+tool_05, "zone_1", "When building", "The build system utilized is SST (Serverless Stack).", "The active test framework is Vitest."
 tool_06, "The edit or replace tool fails to find a match (oldString mismatch).", "Immediately use read_file to inspect the file's current state. If the file is corrupted, use revert_file to restore it.", "Correct: 'Edit failed. Reading file to verify state...' Incorrect: 'Edit failed. Retrying with slightly different string...'"
 persistent_state:
 rules[5]{rule_id,trigger,behaviour,example}:
@@ -92,3 +92,14 @@ pers_02, "A major feature is completed or refactored.", "Generate an updated JSO
 pers_03, "User mentions a feature to be done 'later'.", "Append the feature to the internal pending_todos array.", "Correct: 'Added to TODOs: Implement rate limiting.' Incorrect: 'Okay, we will do that later.'"
 pers_04, "A new npm/pip/cargo package is introduced.", "Log the dependency addition in the persistent state object.", "Correct: 'Dependency added to state: axios@1.6.0.' Incorrect: 'Make sure you save that to package.json.'"
 pers_05, "User asks to hand off to another AI agent or session.", "Generate a dense, markdown-formatted 'Context Document' summarizing current progress and blockers.", "Correct: 'Generating handoff doc: ### Current State... ### Blockers...' Incorrect: 'Goodbye!'"
+
+ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
+project_specific_pack:
+  - rule:
+      Trigger: When performing a multi-file refactor or implementing new features
+      Behaviour: Adhere strictly to the detected stack conventions (Solid.js, Effect-ts, @aws-sdk/client-s3, @epoch-ai/plugin, @epoch-ai/script, @epoch-ai/sdk, typescript, @actions/artifact, @tsconfig/bun, @types/mime-types, @typescript/native-preview, glob, husky, prettier, semver, sst, turbo, @modelcontextprotocol/sdk, @types/js-yaml, js-yaml, marked, zod).
+      Example:
+        Valid:
+        <|">
+        // Adhering to JavaScript/TypeScript and Vitest
+        <|">

@@ -1,0 +1,86 @@
+{
+  "rule_registry": [
+    {
+      "id": "Python-001",
+      "trigger": "Defining generic functions, generic classes, or type aliases (Python 3.12+).",
+      "behavior": "Strictly utilize PEP 695 Type Parameter Syntax (bracket notation). Prohibit importing or instantiating typing.TypeVar, typing.Generic, or typing.TypeAlias. Allow the type checker to perform automatic variance inference. Use lazy evaluation for bounds and constraints.",
+      "example": {
+        "incorrect": "from typing import TypeVar, Generic, TypeAlias\nT = TypeVar('T')\nclass Stack(Generic[T]):\n    pass\nPoint: TypeAlias = tuple[float, float]",
+        "correct": "class Stack[T]:\n    pass\n\ntype Point = tuple[float, float]"
+      }
+    },
+    {
+      "id": "Python-002",
+      "trigger": "Structuring global application state, configuration managers, or complex object instantiation.",
+      "behavior": "Prohibit Java/C++ GoF patterns like Singleton (overriding __new__) and Builder. Use Python modules as natural singletons. Use Pydantic models or dataclasses with default arguments for object construction. Use @typing.overload for complex initialization states.",
+      "example": {
+        "incorrect": "class Database:\n    _instance = None\n    def __new__(cls):\n        if not cls._instance: cls._instance = super().__new__(cls)\n        return cls._instance",
+        "correct": "# database.py\nclass Database:\n    pass\ndb_instance = Database()\n\n# Usage\nfrom database import db_instance"
+      }
+    },
+    {
+      "id": "Python-003",
+      "trigger": "Executing network I/O, database queries, or file operations within an async function.",
+      "behavior": "Maintain event-loop integrity. Prohibit synchronous blocking libraries (requests, psycopg2, open()). Exclusively use async-native libraries (httpx, aiohttp, asyncpg, aiofiles) to ensure control yields back to the loop.",
+      "example": {
+        "incorrect": "import requests\nasync def fetch():\n    return requests.get('https://api.com') # BLOCKS LOOP",
+        "correct": "import httpx\nasync def fetch():\n    async with httpx.AsyncClient() as client:\n        return await client.get('https://api.com')"
+      }
+    },
+    {
+      "id": "Python-004",
+      "trigger": "Performing CPU-heavy data transformations (e.g., large CSV parsing, complex joins) in an async pipeline.",
+      "behavior": "Offload CPU-bound tasks to separate threads or processes using asyncio.to_thread() or ProcessPoolExecutor to prevent stalling the event loop. Prefer Polars over Pandas for multithreaded performance that circumvents the GIL.",
+      "example": {
+        "incorrect": "async def process(data):\n    df = pl.DataFrame(data)\n    return df.group_by('id').agg(pl.col('val').sum()) # BLOCKS LOOP",
+        "correct": "async def process(data):\n    return await asyncio.to_thread(cpu_intensive_task, data)\n\ndef cpu_intensive_task(data):\n    df = pl.DataFrame(data)\n    return df.group_by('id').agg(pl.col('val').sum())"
+      }
+    },
+    {
+      "id": "Python-005",
+      "trigger": "Implementing distributed task queues, background workers, or long-running AI/RAG workflows.",
+      "behavior": "Exclusively use TaskIQ for background processing. Prohibit Celery. Use @broker.task and .kiq(). Utilize the .kicker() chaining interface for dynamic routing to specialized compute nodes (e.g., GPU workers).",
+      "example": {
+        "incorrect": "from celery import Celery\n@app.task\ndef run_inference(prompt):\n    return model(prompt)\nrun_inference.delay(prompt)",
+        "correct": "@broker.task\nasync def run_inference(prompt: str) -> str:\n    return await model.agenerate(prompt)\n\n# Dynamic routing\nawait run_inference.kicker().with_labels(compute='gpu').kiq(prompt)"
+      }
+    },
+    {
+      "id": "Python-006",
+      "trigger": "Configuring ORMs and database schema interactions for ASGI web services.",
+      "behavior": "Use SQLAlchemy 2.0 with asynchronous drivers (asyncpg). Utilize async_sessionmaker. Prohibit synchronous engines or legacy 1.4 query syntaxes in async contexts.",
+      "example": {
+        "incorrect": "engine = create_engine('postgresql://user:pass@localhost/db')\nSession = sessionmaker(bind=engine)",
+        "correct": "engine = create_async_engine('postgresql+asyncpg://user:pass@localhost/db')\nAsyncSession = async_sessionmaker(bind=engine)"
+      }
+    },
+    {
+      "id": "Python-007",
+      "trigger": "Fetching multiple independent datasets or executing disjoint I/O operations simultaneously.",
+      "behavior": "Overlap I/O wait times using asyncio.gather() or asyncio.TaskGroup. Avoid sequential awaits for independent tasks to ensure total time is bound by the slowest task rather than their sum.",
+      "example": {
+        "incorrect": "a = await fetch_a()\nb = await fetch_b()",
+        "correct": "a, b = await asyncio.gather(fetch_a(), fetch_b())"
+      }
+    }
+  ],
+  "architecture_map": {
+    "Async_Microservices_FastAPI": [
+      "Python-001",
+      "Python-002",
+      "Python-003",
+      "Python-006"
+    ],
+    "Event_Driven_Data_Pipelines": [
+      "Python-001",
+      "Python-003",
+      "Python-004",
+      "Python-007"
+    ],
+    "Stateful_Agentic_Workflows": [
+      "Python-001",
+      "Python-002",
+      "Python-005"
+    ]
+  }
+}

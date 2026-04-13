@@ -1,0 +1,146 @@
+{
+  "rule_registry": [
+    {
+      "id": "Vue-001",
+      "trigger": "Generating performance-critical components requesting high-performance rendering or VDOM-less execution.",
+      "behavior": "Utilize Vapor Mode by adding the 'vapor' directive to the script setup tag. This bypasses the Virtual DOM and compiles templates into direct DOM operations.",
+      "example": {
+        "incorrect": "<script setup>\nconst count = ref(0);\n</script>",
+        "correct": "<script setup vapor>\nconst count = ref(0);\n</script>"
+      }
+    },
+    {
+      "id": "Vue-002",
+      "trigger": "Initializing a Vue application intended for hyper-scale performance or minimal bundle size.",
+      "behavior": "Use 'createVaporApp' instead of the standard 'createApp' to completely exclude the Virtual DOM runtime from the application bundle.",
+      "example": {
+        "incorrect": "import { createApp } from 'vue';\ncreateApp(App).mount('#app');",
+        "correct": "import { createVaporApp } from 'vue/vapor';\ncreateVaporApp(App).mount('#app');"
+      }
+    },
+    {
+      "id": "Vue-003",
+      "trigger": "Generating interactive components in Nuxt positioned below the fold or entering the viewport later.",
+      "behavior": "Prohibit custom visibility wrappers or Intersection Observer boilerplate. Use the native 'Lazy' component prefix combined with the 'hydrate-on-visible' compiler directive.",
+      "example": {
+        "incorrect": "<template>\n  <div ref=\"target\">\n    <MyComponent v-if=\"isVisible\" />\n  </div>\n</template>",
+        "correct": "<template>\n  <LazyMyComponent hydrate-on-visible />\n</template>"
+      }
+    },
+    {
+      "id": "Vue-004",
+      "trigger": "Scaffolding a Nuxt module or implementing database/headless CMS adapters.",
+      "behavior": "Prohibit heavy asynchronous logic (e.g., database schema generation) in the module's 'setup()' function. Use 'onInstall()' for one-time setups to prevent rebuild degradation.",
+      "example": {
+        "incorrect": "export default defineNuxtModule({\n  setup(options, nuxt) {\n    await initDatabase();\n  }\n})",
+        "correct": "export default defineNuxtModule({\n  setup(options, nuxt) {\n    nuxt.hook('modules:install', async () => {\n      await initDatabase();\n    });\n  }\n})"
+      }
+    },
+    {
+      "id": "Vue-005",
+      "trigger": "Defining rendering and caching strategies for routes in a Nuxt application.",
+      "behavior": "Prohibit global SSR flags. Use granular 'routeRules' in nuxt.config.ts to apply SWR, ISR, or CSR (ssr: false) based on data volatility.",
+      "example": {
+        "incorrect": "export default defineNuxtConfig({\n  ssr: true\n})",
+        "correct": "export default defineNuxtConfig({\n  routeRules: {\n    '/products/**': { swr: 3600 },\n    '/admin/**': { ssr: false }\n  }\n})"
+      }
+    },
+    {
+      "id": "Vue-006",
+      "trigger": "Ingesting and rendering massive, immutable datasets (e.g., API responses with 1000+ items).",
+      "behavior": "Prohibit deep 'ref()' or 'reactive()' wrapping. Use 'shallowRef()' to avoid the O(n) overhead of recursive Proxy generation and prevent memory leaks.",
+      "example": {
+        "incorrect": "const items = ref(await fetchItems());",
+        "correct": "const items = shallowRef(await fetchItems());"
+      }
+    },
+    {
+      "id": "Vue-007",
+      "trigger": "Implementing state management shared between components or domains.",
+      "behavior": "Prohibit Vuex. Use Pinia setup stores for global state. For localized shared state, use 'Shared Composables' by declaring refs outside the exported function scope.",
+      "example": {
+        "incorrect": "import { createStore } from 'vuex';\nexport default createStore({ ... });",
+        "correct": "const state = ref(0);\nexport const useSharedState = () => {\n  return { state };\n};"
+      }
+    },
+    {
+      "id": "Vue-008",
+      "trigger": "Accessing and watching props within '<script setup>' in Vue 3.5+.",
+      "behavior": "Use native JavaScript destructuring for 'defineProps'. Prohibit 'toRefs(props)'. Pass destructured props to watchers or external composables using a getter function '() => prop'.",
+      "example": {
+        "incorrect": "const props = defineProps<{ count: number }>();\nconst { count } = toRefs(props);\nwatch(count, () => {});",
+        "correct": "const { count } = defineProps<{ count: number }>();\nwatch(() => count, () => {});"
+      }
+    },
+    {
+      "id": "Vue-009",
+      "trigger": "Accessing underlying DOM elements programmatically via template refs in Vue 3.5+.",
+      "behavior": "Prohibit the legacy 'ref(null)' pattern with implicit string-matching. Use the 'useTemplateRef()' built-in composable for better type inference and stability.",
+      "example": {
+        "incorrect": "const audioPlayer = ref<HTMLAudioElement | null>(null);\n// In template: <audio ref=\"audioPlayer\">",
+        "correct": "const audioPlayer = useTemplateRef<HTMLAudioElement>('audio-player');\n// In template: <audio ref=\"audio-player\">"
+      }
+    },
+    {
+      "id": "Vue-010",
+      "trigger": "Generating strictly static components in Nuxt intended to render complex formatting without interactivity.",
+      "behavior": "Append the '.server.vue' suffix to the filename to force Server Component rendering (Nuxt Islands) and ship zero JavaScript to the client.",
+      "example": {
+        "incorrect": "Filename: MyStatic.vue",
+        "correct": "Filename: MyStatic.server.vue"
+      }
+    },
+    {
+      "id": "Vue-011",
+      "trigger": "Importing a dynamic component that should render only on the server as static HTML.",
+      "behavior": "Wrap the component invocation in the '<NuxtIsland>' wrapper to enforce server-only rendering boundaries.",
+      "example": {
+        "incorrect": "<MarkdownParser :content=\"data\" />",
+        "correct": "<NuxtIsland>\n  <MarkdownParser :content=\"data\" />\n</NuxtIsland>"
+      }
+    },
+    {
+      "id": "Vue-012",
+      "trigger": "Writing end-to-end (E2E) testing suites against Vue targets using Playwright.",
+      "behavior": "Prohibit brittle CSS class or ID selectors. Exclusively utilize stable locators like 'getByRole' or 'getByTestId' to ensure test resiliency.",
+      "example": {
+        "incorrect": "await page.locator('.submit-btn').click();",
+        "correct": "await page.getByRole('button', { name: 'Submit' }).click();"
+      }
+    },
+    {
+      "id": "Vue-013",
+      "trigger": "Scaffolding project toolchains, establishing linting pipelines, or CI configurations.",
+      "behavior": "Prohibit legacy Node-based ESLint for high-performance requirements. Configure the project to use the Rust-based 'Oxlint' compiler for native execution speeds.",
+      "example": {
+        "incorrect": "npm install eslint eslint-plugin-vue --save-dev",
+        "correct": "npx oxlint@latest --init"
+      }
+    }
+  ],
+  "architecture_map": {
+    "Vapor_Performance_Matrix": [
+      "Vue-001",
+      "Vue-002"
+    ],
+    "Nuxt_Hybrid_Island_Topology": [
+      "Vue-003",
+      "Vue-004",
+      "Vue-005",
+      "Vue-010",
+      "Vue-011"
+    ],
+    "State_Reactivity_Memory": [
+      "Vue-006",
+      "Vue-007"
+    ],
+    "Modern_DOM_Compiler_Ergonomics": [
+      "Vue-008",
+      "Vue-009"
+    ],
+    "Ecosystem_Tooling_Resiliency": [
+      "Vue-012",
+      "Vue-013"
+    ]
+  }
+}

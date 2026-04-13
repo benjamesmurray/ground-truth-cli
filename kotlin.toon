@@ -1,0 +1,108 @@
+{
+  "rule_registry": [
+    {
+      "id": "Kotlin-001",
+      "trigger": "Defining REST controllers, service dependency injection, or reactive streams in Spring Boot 3.x/4.x.",
+      "behavior": "Prohibit @RestController and @Autowired annotations. Use the functional Bean DSL and Router DSL for type-safety and GraalVM AOT support. Replace Project Reactor types (Mono, Flux) with Kotlin Coroutines (suspend and Flow). Use nullable types (T?) instead of Optional<T>.",
+      "example": {
+        "incorrect": "@RestController\nclass UserController {\n    @Autowired lateinit var service: UserService\n    @GetMapping(\"/api\")\n    fun get(): Flux<User> = service.findAll()\n}",
+        "correct": "val userBeans = beans {\n    bean<UserService>()\n}\n\nval userRouter = coRouter {\n    GET(\"/api\") { req ->\n        val users = ref<UserService>().findAll().asFlow()\n        ok().bodyAndAwait(users)\n    }\n}"
+      }
+    },
+    {
+      "id": "Kotlin-002",
+      "trigger": "Structuring a Ktor application or defining service-to-service communication.",
+      "behavior": "Implement feature-based modularization using Application extension functions instead of a monolithic Application.kt. Use kotlinx.rpc for strongly-typed, lightweight inter-service communication to avoid the overhead of gRPC/Protobuf.",
+      "example": {
+        "incorrect": "fun main() {\n    embeddedServer(Netty) {\n        routing {\n            get(\"/users\") { /* ... */ }\n            get(\"/orders\") { /* ... */ }\n        }\n    }\n}",
+        "correct": "fun Application.userModule() {\n    routing { get(\"/users\") { /* ... */ } }\n}\n\nfun main() {\n    embeddedServer(Netty) {\n        userModule()\n        orderModule()\n    }\n}"
+      }
+    },
+    {
+      "id": "Kotlin-003",
+      "trigger": "Managing state, computed variables, or side effects inside a Jetpack Compose @Composable function.",
+      "behavior": "Prohibit heavy calculations or business state directly in Composables. Wrap computed state dependencies in 'derivedStateOf' to prevent recomposition storms. Isolate side effects in 'LaunchedEffect'. Use Channels exposed via receiveAsFlow() for one-time events (navigation), never StateFlow.",
+      "example": {
+        "incorrect": "val isValid = password.value.length > 8\nLaunchedEffect(Unit) { viewModel.events.collect { ... } }",
+        "correct": "val isValid by remember { derivedStateOf { password.value.length > 8 } }\nval events = viewModel.events.receiveAsFlow()"
+      }
+    },
+    {
+      "id": "Kotlin-004",
+      "trigger": "Implementing an Apache Kafka consumer or stream processor in a coroutine context.",
+      "behavior": "Prohibit low-level KafkaConsumer with runBlocking to avoid thread starvation. Use nomisRev/kotlin-kafka with KafkaReceiver and Flow. Wrap the entry point in SuspendApp for graceful shutdown (SIGTERM handling) and manual offset acknowledgment.",
+      "example": {
+        "incorrect": "runBlocking {\n    val consumer = KafkaConsumer<String, String>(props)\n    while(true) { consumer.poll(100) }\n}",
+        "correct": "SuspendApp {\n    KafkaReceiver(settings)\n        .receive(topic)\n        .map { record ->\n            process(record)\n            record.offset.acknowledge()\n        }.collect()\n}"
+      }
+    },
+    {
+      "id": "Kotlin-005",
+      "trigger": "Sharing interface contracts, enums, sealed classes, or suspend functions across KMP boundaries (e.g., to iOS).",
+      "behavior": "Minimize expect/actual usage; use standard interfaces and Koin for dependency inversion. Avoid manual Swift wrappers. Use the SKIE compiler plugin to automatically generate exhaustive Swift enums for Sealed Classes and map suspend functions to Swift async/await.",
+      "example": {
+        "incorrect": "expect class NetworkClient { suspend fun fetch(): String }\n// Followed by duplicate actual classes in iosMain and androidMain",
+        "correct": "// In commonMain:\ninterface NetworkClient { suspend fun fetch(): String }\n// Use Koin DI for platform implementations and SKIE for Swift bridging."
+      }
+    },
+    {
+      "id": "Kotlin-006",
+      "trigger": "Chaining multiple higher-order functional operations (e.g., map, filter, flatMap) on a dataset.",
+      "behavior": "Never chain operations directly on an Iterable for more than one step to avoid O(n) intermediate allocations. Always convert to a Sequence via .asSequence() first to ensure O(1) intermediate space complexity and lazy evaluation.",
+      "example": {
+        "incorrect": "val result = largeList.filter { it.isActive }.map { it.id }.take(10)",
+        "correct": "val result = largeList.asSequence().filter { it.isActive }.map { it.id }.take(10).toList()"
+      }
+    },
+    {
+      "id": "Kotlin-007",
+      "trigger": "Creating a wrapper class for a single primitive or String to enforce domain type safety (e.g., UserId, Email).",
+      "behavior": "Avoid using data classes for single-value wrappers as they force heap allocations. Use '@JvmInline value class' for a zero-cost abstraction that erases the wrapper at runtime.",
+      "example": {
+        "incorrect": "data class UserId(val id: String)\ndata class Email(val address: String)",
+        "correct": "@JvmInline value class UserId(val id: String)\n@JvmInline value class Email(val address: String)"
+      }
+    },
+    {
+      "id": "Kotlin-008",
+      "trigger": "Instantiating an array or hash map of numbers (Int, Double, Float, Long) for high-performance computation.",
+      "behavior": "Avoid generic Array<T> for primitives (e.g., Array<Int>) to prevent boxed object overhead. Always use unboxed primitive array types (IntArray, DoubleArray) or specialized primitive collections for large datasets.",
+      "example": {
+        "incorrect": "val buffer = Array<Int>(1000) { 0 }",
+        "correct": "val buffer = IntArray(1000) { 0 }"
+      }
+    }
+  ],
+  "architecture_map": {
+    "Spring_Boot_Microservice": [
+      "Kotlin-001",
+      "Kotlin-006",
+      "Kotlin-007",
+      "Kotlin-008"
+    ],
+    "Ktor_Backend": [
+      "Kotlin-002",
+      "Kotlin-006",
+      "Kotlin-007",
+      "Kotlin-008"
+    ],
+    "Kafka_Event_Driven": [
+      "Kotlin-004",
+      "Kotlin-006",
+      "Kotlin-007",
+      "Kotlin-008"
+    ],
+    "Android_Jetpack_Compose": [
+      "Kotlin-003",
+      "Kotlin-006",
+      "Kotlin-007",
+      "Kotlin-008"
+    ],
+    "KMP_Shared_Logic": [
+      "Kotlin-005",
+      "Kotlin-006",
+      "Kotlin-007",
+      "Kotlin-008"
+    ]
+  }
+}

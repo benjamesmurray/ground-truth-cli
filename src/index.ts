@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * ground-truth-cli MCP Server (v1.1.3)
+ * ground-truth-cli MCP Server (v1.1.6)
  * 
  * An Agent-Native project scanner that synthesizes "Ground Truth" rules.
  * Enhanced for monorepos, modern test runtimes (Bun, Playwright), 
@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "ground-truth-cli",
-    version: "1.1.3",
+    version: "1.1.6",
   },
   {
     capabilities: {
@@ -242,13 +242,6 @@ export async function synthesizeRules(targetDir: string) {
   }
 
   // Sequentially replace dynamic placeholders
-  rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.language);
-  rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.test_framework);
-  rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.project_root);
-  rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.build_system);
-  rulesToon = rulesToon.replace("[ENABLED/DISABLED]", ctx.strict_typing);
-  rulesToon = rulesToon.replace("[DYNAMIC] standard", `${ctx.docs_standard} standard`);
-  rulesToon = rulesToon.replace("[DYNAMIC: TO BE FILLED BY MCP]", ctx.architecture);
   rulesToon = rulesToon.replace("[EXPERT_DEV_GUIDANCE]", toonRules);
 
   const specificPack = `
@@ -295,7 +288,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
           content: [{ 
             type: "text", 
-            text: `Project: ground-truth-cli (v1.1.3) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
+            text: `Project: ground-truth-cli (v1.1.6) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
           }],
         };
       }
@@ -328,7 +321,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Ground Truth CLI MCP server (v1.1.3) running on stdio");
+  console.error("Ground Truth CLI MCP server (v1.1.6) running on stdio");
 }
 
 main().catch(console.error);

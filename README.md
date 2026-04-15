@@ -1,4 +1,4 @@
-# ground-truth-cli (v1.1.6)
+# ground-truth-cli (v1.1.7)
 
 An **Agent-Native** Model Context Protocol (MCP) server designed for project initialization and "Ground Truth" rule synthesis. It streamlines the onboarding process for AI coding assistants by scanning project context and generating rigid behavioural constraints in Token-Oriented Object Notation (TOON).
 
@@ -36,7 +36,7 @@ Each rule follows a strict 3-part schema:
 2. **Behaviour:** The rigid constraint (e.g., "You must use JSDoc for all parameters.").
 3. **Example:** Correct vs. Incorrect illustrations using native string bounding tokens `<|">`.
 
-## 🔄 The Scanning Pipeline (v1.1.6)
+## 🔄 The Scanning Pipeline (v1.1.7)
 When `gt_exec scan .` or `gt_refresh` is invoked:
 1. **Operational Fact Anchoring:** Injects 7 immutable facts regarding context limits, reasoning modes (LOW), and mandatory tool usage (mcpx).
 2. **Multi-Language Discovery:** The server detects the primary project language (TypeScript, Vue, Rust, Go, Python, Kotlin).
@@ -45,8 +45,8 @@ When `gt_exec scan .` or `gt_refresh` is invoked:
 5. **Enhanced Ecosystem Heuristics:** Automatically detects modern runtimes and frameworks including:
    - **Testing:** Bun Native Testing, Playwright (E2E), Vitest, Jest, Cypress, AVA.
    - **Frameworks:** Solid.js, SST (Serverless Stack), Effect-ts.
-6. **Prioritized Guideline Extraction:** The scanner prioritizes AI-specific instructions found in **`AGENTS.md`**, **`.cursorrules`**, and **`.windsurfrules`**.
-7. **Project Gap Synthesis:** Any unique project requirements are synthesized into a `project_specific_pack`.
+6. **Prioritized Guideline Integration:** `AGENTS.md` is prioritized as a first-class architectural component. To avoid context redundancy, `AGENTS.md` content is no longer extracted into the generated `.toon` rule file.
+7. **Conditional Project Gap Synthesis:** A `project_specific_pack` is generated only if unique project requirements (like specific stack conventions) are detected, preventing empty rule blocks.
 8. **Final Output:** A complete `.assistant_rules.toon` file is generated, acting as the "Project Constitution".
 
 ## 📦 Installation

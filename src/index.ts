@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * ground-truth-cli MCP Server (v1.1.6)
+ * ground-truth-cli MCP Server (v1.1.7)
  * 
  * An Agent-Native project scanner that synthesizes "Ground Truth" rules.
  * Enhanced for monorepos, modern test runtimes (Bun, Playwright), 
@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "ground-truth-cli",
-    version: "1.1.6",
+    version: "1.1.7",
   },
   {
     capabilities: {
@@ -244,10 +244,13 @@ export async function synthesizeRules(targetDir: string) {
   // Sequentially replace dynamic placeholders
   rulesToon = rulesToon.replace("[EXPERT_DEV_GUIDANCE]", toonRules);
 
-  const specificPack = `
+  let specificPack = `
 ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
 project_specific_pack:
-  - rule:
+`;
+
+  if (ctx.stack && ctx.stack.trim() !== "") {
+    specificPack += `  - rule:
       Trigger: When performing a multi-file refactor or implementing new features
       Behaviour: Adhere strictly to the detected stack conventions (${ctx.stack}).
       Example:
@@ -255,16 +258,12 @@ project_specific_pack:
         <|">
         // Adhering to ${ctx.language} and ${ctx.test_framework}
         <|">
-
-  - rule:
-      Trigger: When interpreting project guidelines
-      Behaviour: Prioritize the following extracted intent: ${ctx.guidelines.substring(0, 200)}...
-      Example:
-        Correct:
-        <|">
-        // Guideline alignment check
-        <|">
 `;
+  }
+
+  if (specificPack.trim() === "ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)\nproject_specific_pack:") {
+    specificPack = "";
+  }
 
   const finalOutput = rulesToon + specificPack;
   await fs.writeFile(path.join(targetDir, ".assistant_rules.toon"), finalOutput);
@@ -288,7 +287,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
           content: [{ 
             type: "text", 
-            text: `Project: ground-truth-cli (v1.1.6) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
+            text: `Project: ground-truth-cli (v1.1.7) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
           }],
         };
       }
@@ -321,7 +320,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Ground Truth CLI MCP server (v1.1.6) running on stdio");
+  console.error("Ground Truth CLI MCP server (v1.1.7) running on stdio");
 }
 
 main().catch(console.error);

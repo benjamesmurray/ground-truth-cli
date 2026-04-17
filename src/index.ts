@@ -287,7 +287,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
           content: [{ 
             type: "text", 
-            text: `Project: ground-truth-cli (v1.1.7) | Phase: IDLE\nNext: Run \`gt_refresh\` or \`gt_exec scan .\`` 
+            text: `Project: ground-truth-cli (v1.1.7) | Phase: IDLE\nNext: Run \`ground gt_refresh\` or \`ground gt_exec scan .\`` 
           }],
         };
       }

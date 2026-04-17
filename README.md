@@ -1,4 +1,4 @@
-# ground-truth-cli (v1.1.7)
+# ground-truth-cli (v1.1.9)
 
 An **Agent-Native** Model Context Protocol (MCP) server designed for project initialization and "Ground Truth" rule synthesis. It streamlines the onboarding process for AI coding assistants by scanning project context and generating rigid behavioural constraints in Token-Oriented Object Notation (TOON).
 
@@ -7,7 +7,7 @@ This server follows the **Agent-Native** architecture pattern:
 - **Cobra-Style Grammar:** Tools use an `[object]-[action]` reasoning structure.
 - **Pull Discovery:** Minimal initial token footprint.
 - **TOON Optimized:** Outputs are formatted in Token-Oriented Object Notation to reduce context usage by 40-60%.
-- **State Aware:** Tracks project phase (Idle -> Scanned) to guide the agent's next steps without explicit system prompt instructions.
+- **State Aware:** Tracks project phase (Idle -> Scanned) to guide the agent's next steps. Usage is typically aliased via `ground` for consistent tool routing.
 
 ## 🛠 Tools
 
@@ -15,7 +15,7 @@ This server follows the **Agent-Native** architecture pattern:
 |--- |--- |--- |
 | `gt_status` | Orient | Returns high-level summary of the current project state and orientation. |
 | `gt_refresh` | Build | Parameterless tool to quickly rebuild the project rules based on current context. |
-| `gt_exec` | Act | The workhorse tool. Usage: `gt_exec scan <path>`. |
+| `gt_exec` | Act | The workhorse tool. Usage: `ground gt_exec scan <path>`. |
 
 ## 🧩 Ground Truth Methodology (10 Cognitive Domains)
 The scanner leverages a permanent rule library (`ground_truth_rules.toon`) covering 10 critical cognitive domains:
@@ -36,8 +36,8 @@ Each rule follows a strict 3-part schema:
 2. **Behaviour:** The rigid constraint (e.g., "You must use JSDoc for all parameters.").
 3. **Example:** Correct vs. Incorrect illustrations using native string bounding tokens `<|">`.
 
-## 🔄 The Scanning Pipeline (v1.1.7)
-When `gt_exec scan .` or `gt_refresh` is invoked:
+## 🔄 The Scanning Pipeline (v1.1.9)
+When `ground gt_exec scan .` or `ground gt_refresh` is invoked:
 1. **Operational Fact Anchoring:** Injects 7 immutable facts regarding context limits, reasoning modes (LOW), and mandatory tool usage (mcpx).
 2. **Multi-Language Discovery:** The server detects the primary project language (TypeScript, Vue, Rust, Go, Python, Kotlin).
 3. **Architecture Mapping:** Automatically identifies the project's architectural domain (e.g., Next.js App Router, Axum Web Microservices, Kafka Event-Driven, etc.) based on dependency fingerprints.
@@ -65,10 +65,10 @@ Add this server to your MCP client configuration (e.g., `claude_desktop_config.j
 ```
 
 ## 🔄 Workflow Integration
-For maximum efficiency, this tool is designed to be used alongside `project-map-cli`.
+For maximum efficiency, this tool is designed to be used alongside `project-map-cli` and typically aliased to `ground`.
 
 1. **Map:** Agent uses `project-map-cli` to understand repo structure.
-2. **Scan:** Agent runs `gt_exec scan .`.
+2. **Scan:** Agent runs `ground gt_exec scan .`.
 3. **Rules:** `.assistant_rules.toon` is generated with permanent 9-domain rules + project gaps.
 4. **Develop:** The AI assistant now follows the "Ground Truth" project constitution.
 

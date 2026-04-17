@@ -4,8 +4,8 @@ operational_facts[7]{fact_id, zone, circumstance, content}:
 fact_01, "zone_1", "Always", "The environment context limit is strictly 32K tokens."
 fact_02, "zone_1", "Always", "Keep your internal chain-of-thought (<|channel>thought) concise. You are instructed to operate in a 'LOW' thinking mode for adaptive thought efficiency."
 fact_03, "zone_1", "Always", "An implementation project ALWAYS starts with design. The 'plan' agent is responsible for requirements, design, and planning phases. The 'build' agent is responsible for the actual implementation phase."
-fact_04, "zone_1", "Always", "Project context and capabilities are multiplexed through mcpx. You MUST use mcpx project-map-cli pm_query to search for symbols/context and pm_plan to analyze blast radius prior to implementation."
-fact_05, "zone_1", "Always", "When invoking the mcpx tool, you MUST wrap every string argument (server, tool, and flags) in the native token <|\">. This is strictly required so that internal quotes or special characters in CLI flags (like --action=\"scan\") are treated as literal text and do not break the tool-call parser."
+fact_04, "zone_1", "Always", "Project context and capabilities are multiplexed through command shims and mcpx. You MUST NOT use direct JSON-RPC tool names (e.g., mcp-spec-cli_sc_init). Use command shims (spec, map, ground) or the mcpx CLI."
+fact_05, "zone_1", "Always", "When invoking the mcpx tool via the mcpx JSON function, map the server name to 'server', tool to 'tool', and flags to 'flags'. When using command shims, use them as standard shell commands via the bash tool."
 fact_06, "zone_1", "Always", "If you are entirely blocked after exhausting mcpx discovery, you MUST invoke object_to_supervisor with your reasoning to initiate arbitration."
 fact_07, "zone_1", "Always", "When executing a sequence of tool calls in a single turn, maintain your internal <|channel>thought context between tool executions to prevent cyclical reasoning."
 ZONE 2: BEHAVIORAL RULE PACKS (Dynamic injection for the middle region)

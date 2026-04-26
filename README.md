@@ -1,4 +1,4 @@
-# ground-truth-cli (v1.1.9)
+# ground-truth-cli (v1.2.0)
 
 An **Agent-Native** Model Context Protocol (MCP) server designed for project initialization and "Ground Truth" rule synthesis. It streamlines the onboarding process for AI coding assistants by scanning project context and generating rigid behavioural constraints in Token-Oriented Object Notation (TOON).
 
@@ -36,13 +36,13 @@ Each rule follows a strict 3-part schema:
 2. **Behaviour:** The rigid constraint (e.g., "You must use JSDoc for all parameters.").
 3. **Example:** Correct vs. Incorrect illustrations using native string bounding tokens `<|">`.
 
-## 🔄 The Scanning Pipeline (v1.1.9)
+## 🔄 The Scanning Pipeline (v1.2.0)
 When `ground gt_exec scan .` or `ground gt_refresh` is invoked:
-1. **Operational Fact Anchoring:** Injects 7 immutable facts regarding context limits, reasoning modes (LOW), and mandatory tool usage (mcpx).
+1. **Operational Fact Anchoring:** Injects 5 dynamic facts regarding context limits (placeholder for downstream injection), build systems, test frameworks, and tool syntax.
 2. **Multi-Language Discovery:** The server detects the primary project language (TypeScript, Vue, Rust, Go, Python, Kotlin).
 3. **Architecture Mapping:** Automatically identifies the project's architectural domain (e.g., Next.js App Router, Axum Web Microservices, Kafka Event-Driven, etc.) based on dependency fingerprints.
 4. **Dynamic Rule Injection:** Injects expert-level architectural rules from specialized `.toon` files (e.g., `typescript.toon`, `rust.toon`) that match the detected stack.
-5. **Enhanced Ecosystem Heuristics:** Automatically detects modern runtimes and frameworks including:
+5. **Enhanced Ecosystem Heuristics:** Decouples project-specific heuristics (like SST and Vitest) from the core source code. These are now dynamically injected based on the detected workspace:
    - **Testing:** Bun Native Testing, Playwright (E2E), Vitest, Jest, Cypress, AVA.
    - **Frameworks:** Solid.js, SST (Serverless Stack), Effect-ts.
 6. **Prioritized Guideline Integration:** `AGENTS.md` is prioritized as a first-class architectural component. To avoid context redundancy, `AGENTS.md` content is no longer extracted into the generated `.toon` rule file.

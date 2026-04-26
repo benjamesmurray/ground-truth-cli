@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * ground-truth-cli MCP Server (v1.1.7)
+ * ground-truth-cli MCP Server (v1.2.0)
  * 
  * An Agent-Native project scanner that synthesizes "Ground Truth" rules.
  * Enhanced for monorepos, modern test runtimes (Bun, Playwright), 
@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const server = new Server(
   {
     name: "ground-truth-cli",
-    version: "1.1.7",
+    version: "1.2.0",
   },
   {
     capabilities: {
@@ -242,7 +242,10 @@ export async function synthesizeRules(targetDir: string) {
   }
 
   // Sequentially replace dynamic placeholders
-  rulesToon = rulesToon.replace("[EXPERT_DEV_GUIDANCE]", toonRules);
+  rulesToon = rulesToon
+    .replace("[EXPERT_DEV_GUIDANCE]", toonRules)
+    .replace("[BUILD_SYSTEM]", ctx.build_system || "npm")
+    .replace("[TEST_FRAMEWORK]", ctx.test_framework || "Unknown (verify via ls)");
 
   let specificPack = `
 ZONE 3: PROJECT-SPECIFIC RULES (Context-Aware Gaps)
@@ -287,7 +290,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
           content: [{ 
             type: "text", 
-            text: `Project: ground-truth-cli (v1.1.7) | Phase: IDLE\nNext: Run \`ground gt_refresh\` or \`ground gt_exec scan .\`` 
+            text: `Project: ground-truth-cli (v1.2.0) | Phase: IDLE\nNext: Run \`ground gt_refresh\` or \`ground gt_exec scan .\`` 
           }],
         };
       }
@@ -320,7 +323,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("Ground Truth CLI MCP server (v1.1.7) running on stdio");
+  console.error("Ground Truth CLI MCP server (v1.2.0) running on stdio");
 }
 
 main().catch(console.error);
